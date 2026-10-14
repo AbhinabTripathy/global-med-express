@@ -14,4 +14,16 @@ describe("App routing", () => {
 
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
+
+  it("matches the dedicated products page", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    expect(router.matchRoutes("/products").at(-1)?.routeId).toBe("/products");
+  });
+
+  it("matches the enquiry page linked from the navigation", () => {
+    const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+
+    expect(router.matchRoutes("/inquiry").at(-1)?.routeId).toBe("/inquiry");
+  });
 });
