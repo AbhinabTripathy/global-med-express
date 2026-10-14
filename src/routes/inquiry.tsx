@@ -1,0 +1,31 @@
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { useState, type FormEvent } from 'react';
+import { useServerFn } from '@tanstack/react-start';
+import { ArrowUpRight, CheckCircle2, Mail, MapPin, Phone, Search, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useInquiry } from '@/components/inquiry-context';
+import { inquirySchema } from '@/lib/inquiry-schema';
+import { submitInquiry } from '@/lib/inquiry.functions';
+import { products } from '@/lib/products';
+import { pageHead } from '@/lib/metadata';
+export const Route = createFileRoute('/inquiry')({ head: () => pageHead('Medicine Requirements & Export Inquiries', 'Submit your medicine requirements, dossier request or distributor inquiry to SSI Pharma’s export desk for the Middle East and Philippines.'), component: Inquiry });
+const countries = ['Philippines', 'Saudi Arabia', 'United Arab Emirates', 'Qatar', 'Kuwait', 'Bahrain', 'Oman', 'Jordan', 'Iraq', 'Lebanon', 'Yemen', 'Palestine', 'Other'];
+function Inquiry() {
+  const { selected, toggle, clear } = useInquiry();
+  const [search, setSearch] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [reference, setReference] = useState('');
+  const send = useServerFn(submitInquiry);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setError('');
+    const fields = Object.fromEntries(new FormData(event.currentTarget));
+    const parsed = inquirySchema.safeParse({ ...fields, products: selected });
+    if (!parsed.success) { setError(parsed.error.issues[0]?.message ?? 'Please check your details.'); return; }
+    setBusy(true);
+    try { const result = await send({ data: parsed.data }); setReference(result.reference); clear(); }
+    catch { setError('Your inquiry could not be saved. Please try again or contact our export desk.'); }
+    finally { setBusy(false); }
+  }
+  return <div className="content-page site-container inquiry-page"><span className="eyebrow">CONNECT WITH OUR EXPORT DESK</span><h1>Your requirements.<br /><em>Our next conversation.</em></h1><p className="page-intro">Medicine supply, regulatory documentation, tenders or a distributor partnership — tell us what you need.</p><div className="inquiry-layout"><aside><h2>One accountable<br />point of contact.</h2><p>SSI Pharma coordinates your product, documentation and export requirements from Vadodara, India.</p><div className="contact-details"><a href="mailto:info@ssiexport.com"><Mail />info@ssiexport.com</a><a href="tel:+918866194011"><Phone />+91 8866194011</a><p><MapPin /><span>F-504, Samanvay Status,<br />Atladra Road, Vadodara,<br />Gujarat 390012, India</span></p></div><span className="eyebrow">PRIORITY MARKETS</span><p>Middle East · Philippines</p></aside><div>{reference ? <div className="inquiry-success" role="status"><CheckCircle2 size={44} /><h2>Inquiry received.</h2><p>Your medicine requirements have been securely submitted to SSI Pharma.</p><p className="reference">Reference: {reference.slice(0, 8).toUpperCase()}</p><Button asChild><Link to="/">Back to the portfolio <ArrowUpRight /></Link></Button></div> : <form onSubmit={submit} className="inquiry-form"><h2>Send your medicine requirements.</h2><div className="form-grid"><label>Full name *<input name="buyer_name" placeholder="Your full name" required minLength={2} maxLength={100} autoComplete="name" /></label><label>Company / institution *<input name="company_name" placeholder="Company name" required minLength={2} maxLength={150} autoComplete="organization" /></label><label>Business email *<input name="email" placeholder="you@company.com" type="email" required maxLength={255} autoComplete="email" /></label><label>Phone number<input name="phone" placeholder="Include country code" type="tel" maxLength={40} autoComplete="tel" /></label><label>Destination country *<select name="country" required defaultValue=""><option value="" disabled>Select country</option>{countries.map(c => <option key={c}>{c}</option>)}</select></label><label>Buyer type *<select name="buyer_type" defaultValue="Distributor"><option>Distributor</option><option>Hospital / Institution</option><option>Government / Tender</option><option>Other</option></select></label></div><div className="medicine-picker"><label htmlFor="medicine-search">Medicines required *</label><div className="search-box"><Search size={17} /><input id="medicine-search" value={search} maxLength={150} placeholder="Search and select medicines" onChange={e => setSearch(e.target.value)} /></div>{search.trim() && <div className="picker-results">{products.filter(p => p.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8).map(p => <Button variant="ghost" type="button" key={p.id} onClick={() => { if (!selected.includes(p.id)) toggle(p.id); setSearch(''); }}>{p.name}{selected.includes(p.id) && <CheckCircle2 size={16} />}</Button>)}</div>}<div className="selected-medicines">{selected.map(id => { const p = products.find(p => p.id === id); return p ? <div key={id}><span>{p.name}</span><Button type="button" variant="ghost" size="icon" aria-label={`Remove ${p.name}`} onClick={() => toggle(id)}><X /></Button></div> : null; })}</div>{selected.length === 0 && <p className="small-note">No medicines selected. <Link to="/">Explore the portfolio</Link></p>}</div><label>Quantities & requirements *<textarea name="requirement_details" placeholder="Please include product quantities, packaging preferences, target timelines and any dossier or tender requirements." required minLength={10} maxLength={2000} rows={5} /></label><label className="honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" /></label><label className="consent"><input type="checkbox" required />I agree that SSI Pharma may contact me regarding this inquiry.</label>{error && <p className="form-error" role="alert">{error}</p>}<Button type="submit" disabled={busy}>{busy ? 'Submitting inquiry…' : 'Submit inquiry'}<ArrowUpRight /></Button><p className="small-note">For licensed pharmaceutical buyers and healthcare institutions. Supply is subject to destination-market requirements.</p></form>}</div></div></div>;
+}
