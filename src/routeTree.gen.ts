@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as InquiryRouteImport } from './routes/inquiry'
+import { Route as ProductsRouteImport } from './routes/products'
 import { Route as QualityRouteImport } from './routes/quality'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const InquiryRoute = InquiryRouteImport.update({
   path: '/inquiry',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProductsRoute = ProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QualityRoute = QualityRouteImport.update({
   id: '/quality',
   path: '/quality',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/inquiry': typeof InquiryRoute
+  '/products': typeof ProductsRoute
   '/quality': typeof QualityRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/inquiry': typeof InquiryRoute
+  '/products': typeof ProductsRoute
   '/quality': typeof QualityRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/inquiry': typeof InquiryRoute
+  '/products': typeof ProductsRoute
   '/quality': typeof QualityRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/inquiry' | '/quality'
+  fullPaths: '/' | '/about' | '/inquiry' | '/products' | '/quality'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/inquiry' | '/quality'
-  id: '__root__' | '/' | '/about' | '/inquiry' | '/quality'
+  to: '/' | '/about' | '/inquiry' | '/products' | '/quality'
+  id: '__root__' | '/' | '/about' | '/inquiry' | '/products' | '/quality'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   InquiryRoute: typeof InquiryRoute
+  ProductsRoute: typeof ProductsRoute
   QualityRoute: typeof QualityRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InquiryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/products': {
+      id: '/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof ProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quality': {
       id: '/quality'
       path: '/quality'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   InquiryRoute: InquiryRoute,
+  ProductsRoute: ProductsRoute,
   QualityRoute: QualityRoute,
 }
 export const routeTree = rootRouteImport
