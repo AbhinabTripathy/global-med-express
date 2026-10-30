@@ -1,4 +1,4 @@
-export type Product = { id: string; name: string; category: string; form: string; presentation: string };
+export type Product = { id: string; name: string; molecule: string; category: string; form: string; presentation: string };
 
 const portfolio: Record<string, string[]> = {
   'Anti-Infectives & Antivirals': [
@@ -16,19 +16,28 @@ const portfolio: Record<string, string[]> = {
   'Antihistamines & Anti-Allergic': ['Diphenhydramine Hydrochloride Injection USP 10 mg/ml — 1 ml Ampoule', 'Pheniramine Injection IP 22.75 mg/ml — 100 ml Vial'],
   'IV Fluids & Electrolytes': ['Sodium Chloride Injection BP 0.9% w/v — 5 ml', 'Sodium Chloride Injection BP 0.9% w/v — 10 ml'],
   'Antiparasitic': ['Ivermectin Injection IP 1% w/v — 100 ml'],
-  'Ophthalmic & ENT Care': ['Boric Acid Eye/Ear Drops 2% w/v — 15 ml Bottle', 'Ciprofloxacin Ophthalmic Solution USP 0.3% w/v — 5 ml & 10 ml Plastic Bottle', 'Dexamethasone Sodium Phosphate Ophthalmic Solution USP 0.1% w/v — 5 ml Plastic Bottle', 'Betamethasone Sodium Phosphate Ophthalmic Solution 0.1% w/v — 5 ml Plastic Bottle', 'Betamethasone Sodium Phosphate 0.1% and Neomycin Sulfate 0.5% Eye/Ear/Nose Drops — 5 ml & 10 ml Plastic Bottle', 'Neomycin Sulfate 0.5% & Dexamethasone Sodium Phosphate 0.1% Ophthalmic Solution USP — 3 ml & 5 ml Plastic Bottle', 'Gentamicin Sulfate Ophthalmic Solution USP 0.3% w/v — 5 ml & 10 ml Plastic Bottle', 'Chloramphenicol Ophthalmic Solution USP 0.5% w/v — 5 ml & 10 ml Plastic Bottle', 'Ciprofloxacin + Hydrocortisone Eye Drops 5 ml Plastic Bottle'],
-  'Endocrinology & Metabolic Care': ['Semaglutide Injection 1 mg/1.5 ml', 'Semaglutide Injection 2 mg/1.5 ml', 'Semaglutide Injection 4 mg/3 ml', 'Semaglutide Injection 6.8 mg/3 ml', 'Colecalciferol Injection 300000 IU/ml', 'Colecalciferol Injection 600000 IU/ml'],
-  'Orthopedic & Joint Care': ['Sodium Hyaluronate Injection 25 mg/2.5 ml', 'Sodium Hyaluronate Injection 10 mg/ml'],
-  'Animal Health': ['Meloxicam Injection BP (Veterinary) — 100 ml', 'Meloxicam & Paracetamol Injection (Veterinary) — 100 ml', 'Amikacin Sulphate Injection IP 250 mg/ml (Veterinary) — 100 ml'],
+  'Endocrinology & Metabolic Care': ['Colecalciferol Injection 300000 IU/ml', 'Colecalciferol Injection 600000 IU/ml'],
 };
 
 export const categories = Object.keys(portfolio);
+export const forms = ['Dry Powder Vial', 'Liquid Vial', 'Ampoule', 'Prefilled Syringe'];
+
+const trailingWords = ['injection', 'usp', 'bp', 'ip', 'ih', 'infusion', 'for', 'solution', 'ophthalmic', 'drops', 'ampoule', 'vial', 'bottle', 'plastic', 'w/v', 'ml', '—', '-'];
+
+function cleanMolecule(raw: string) {
+  const tokens = raw.trim().split(/\s+/);
+  while (tokens.length > 1 && (trailingWords.includes(tokens[tokens.length - 1].toLowerCase()) || /^[\d.]+$/.test(tokens[tokens.length - 1]))) tokens.pop();
+  return tokens.join(' ').replace(/[—-]\s*$/, '').trim();
+}
+
 export const products: Product[] = Object.entries(portfolio).flatMap(([category, names], categoryIndex) => names.map((name, i) => {
-  const form = category === 'Ophthalmic & ENT Care' ? 'Eye / Ear Drop' : /Ampoule/i.test(name) ? 'Ampoule' : /^Enoxaparin|^Semaglutide|^Sodium Hyaluronate/.test(name) ? 'Prefilled Syringe' : /for Injection|for Infusion|Chloramphenicol Sodium|Pralidoxime/.test(name) ? 'Dry Powder Vial' : 'Liquid Vial';
-  const presentation = name.match(/\d[\d.]*\s*(?:mg|mcg|IU|%)[\s\S]*/)?.[0] ?? 'Specification on inquiry';
-  return { id: `ssi-${categoryIndex + 1}-${i + 1}`, name, category, form, presentation };
+  const strength = name.match(/\d[\d.]*\s*(?:mg|mcg|IU|%)[\s\S]*/)?.[0];
+  const molecule = cleanMolecule(strength ? name.slice(0, name.indexOf(strength)) : name);
+  const form = /Ampoule/i.test(name) ? 'Ampoule' : /^Enoxaparin/.test(name) ? 'Prefilled Syringe' : /for Injection|for Infusion|Chloramphenicol Sodium|Pralidoxime/.test(name) ? 'Dry Powder Vial' : 'Liquid Vial';
+  const presentation = strength ?? 'Specification on inquiry';
+  return { id: `ssi-${categoryIndex + 1}-${i + 1}`, name, molecule, category, form, presentation };
 }));
-export const forms = ['Dry Powder Vial', 'Liquid Vial', 'Ampoule', 'Prefilled Syringe', 'Eye / Ear Drop'];
+
 export function filterProducts(query: string, category: string, form: string) {
   const term = query.trim().toLowerCase();
   return products.filter(p => (!term || `${p.name} ${p.category}`.toLowerCase().includes(term)) && (category === 'All categories' || p.category === category) && (form === 'All forms' || p.form === form));
