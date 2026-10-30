@@ -10,6 +10,7 @@ export const submitInquiry = createServerFn({ method: 'POST' })
     const { data: row, error } = await supabaseAdmin.from('product_inquiries').insert({
       ...fields,
       products: fields.products.map(id => products.find(p => p.id === id)?.name ?? id),
+      requirement_details: fields.requirement_details || '',
     }).select('id').single();
     if (error || !row) throw new Error('Your inquiry could not be saved. Please try again.');
     return { reference: row.id };
